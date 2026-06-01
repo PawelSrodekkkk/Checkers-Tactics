@@ -1,0 +1,29 @@
+name: Java PR Testing Pipeline
+
+on:
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-test:
+    name: Build and Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      # Krok 1: Pobranie kodu repozytorium
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Krok 2: Konfiguracja środowiska Javy
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21' # Zmień na wersję, której używacie w projekcie (np. '17' lub '11')
+          distribution: 'temurin' # Popularna i darmowa dystrybucja OpenJDK od Eclipse
+          cache: 'maven' # Magia GitHub Actions - automatycznie cache'uje zależności pobrane w '.m2', co drastycznie skraca czas kolejnych testów!
+
+      # Krok 3: Uruchomienie testów jednostkowych
+      #- name: Run tests with Maven
+      #  run: mvn -B test --file pom.xml
+        # Flaga -B (batch mode) wyłącza interaktywny pasek postępu w logach,
+        # dzięki czemu zakładka Actions na GitHubie jest znacznie bardziej czytelna.
