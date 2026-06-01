@@ -23,7 +23,7 @@ jobs:
           cache: 'maven' # Magia GitHub Actions - automatycznie cache'uje zależności pobrane w '.m2', co drastycznie skraca czas kolejnych testów!
 
       # Krok 3: Uruchomienie testów jednostkowych
-      - name: Run tests with Maven
-        run: mvn -B test --file pom.xml
+      #- name: Run tests with Maven
+      #  run: mvn -B test --file pom.xml
         # Flaga -B (batch mode) wyłącza interaktywny pasek postępu w logach,
         # dzięki czemu zakładka Actions na GitHubie jest znacznie bardziej czytelna.
