@@ -10,3 +10,4 @@ class MainTest {
     void exampleTest() {
         assertTrue(true);
     }
+}
