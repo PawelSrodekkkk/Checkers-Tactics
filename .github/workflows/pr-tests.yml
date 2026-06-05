@@ -5,25 +5,43 @@ on:
     branches: [ "main", "master" ]
 
 jobs:
-  build-and-test:
-    name: Build and Run Tests
+  compile:
+    name: Compile project
     runs-on: ubuntu-latest
 
     steps:
-      # Krok 1: Pobranie kodu repozytorium
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Krok 2: Konfiguracja środowiska Javy
-      - name: Set up JDK
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          java-version: '21' # Zmień na wersję, której używacie w projekcie (np. '17' lub '11')
-          distribution: 'temurin' # Popularna i darmowa dystrybucja OpenJDK od Eclipse
-          cache: 'maven' # Magia GitHub Actions - automatycznie cache'uje zależności pobrane w '.m2', co drastycznie skraca czas kolejnych testów!
+          distribution: temurin
+          java-version: '21'
+          cache: maven
 
-      # Krok 3: Uruchomienie testów jednostkowych
-      #- name: Run tests with Maven
-      #  run: mvn -B test --file pom.xml
-        # Flaga -B (batch mode) wyłącza interaktywny pasek postępu w logach,
-        # dzięki czemu zakładka Actions na GitHubie jest znacznie bardziej czytelna.
+      - name: Compile main source code
+        run: mvn -B clean compile
+
+  tests:
+    name: Run custom automated tests
+    runs-on: ubuntu-latest
+    needs: compile
+    continue-on-error: true
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Compile test source code
+        run: mvn -B test-compile
+
+      - name: Run custom TestRunner
+        run: java -cp target/test-classes com.checkerstactics.TestRunner
