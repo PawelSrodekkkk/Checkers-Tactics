@@ -1,8 +1,10 @@
 package Checkers_Tactics;
 
 
+import Checkers_Tactics.gui.CheckersGUI;
 import Checkers_Tactics.network.*;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.util.Scanner;
 
@@ -15,6 +17,7 @@ public class Main {
 
         System.out.println("1. Utworz grę");
         System.out.println("2. Dolacz do gry");
+        System.out.println("3. Testowanie GUI");
         System.out.print("Wybierz opcję: ");
 
         String choice = scanner.nextLine();
@@ -29,6 +32,11 @@ public class Main {
             } else if ("2".equals(choice)) {
                 guestConnection = startGuest(scanner);
                 testGuestCommunication(guestConnection);
+            } else if ("3".equals(choice)) {
+                SwingUtilities.invokeLater(() -> {
+                    CheckersGUI gui = new CheckersGUI();
+                    gui.setVisible(true);
+                });
             } else {
                 System.out.println("Niepoprawny wybor");
             }
