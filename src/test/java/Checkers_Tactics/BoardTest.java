@@ -9,7 +9,17 @@ public class BoardTest {
         Board.Initialize(CheckersStartPosition.WHITE_ON_TOP);
         Board.Preview();
         System.out.println();
-        Board.MoveCheckerOnce(2, 1, 3, 2);
+
+        Board.MoveCheckerOnce(2, 0, 3, 1);
         Board.Preview();
+        System.out.println();
+
+        Board.MoveCheckerOnce(2, 0, 3, 1);
+        Board.Preview();
+        System.out.println();
+
+        Board.MoveCheckerOnce(5, 1, 4, 2);
+        Board.Preview();
+        System.out.println();
     }
 }

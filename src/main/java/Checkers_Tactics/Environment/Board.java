@@ -3,8 +3,13 @@ package Checkers_Tactics.Environment;
 public class Board {
     private static final int NUM_OF_TILES = 8;
     private static final int ROWS_PER_COLOR = 3;
+    //orientation: from top left to bottom right
     private static final int[][] boardState = new int[8][8];
     private static CheckersStartPosition whitePosition;
+
+    static {
+        whitePosition = Board.CheckersStartPosition.WHITE_ON_BOTTOM;
+    }
 
     public static boolean Initialize(CheckersStartPosition whitePosition) {
         Board.whitePosition = whitePosition;
@@ -33,40 +38,35 @@ public class Board {
 
     public static boolean MoveCheckerOnce(int fromRow, int fromCol, int toRow, int toCol) {
         int canCheckerMoveResult = CanCheckerMoveOnce(fromRow, fromCol, toRow, toCol);
-        if (canCheckerMoveResult == 0) {
+        if (canCheckerMoveResult == 0)
             return false;
-        } else {
-            int invertedFromRow = 8 - fromRow - 1;
-            int invertedToRow = 8 - toRow - 1;
-            int checkerToMove = boardState[invertedFromRow][fromCol];
-            boardState[invertedFromRow][fromCol] = 0;
-            boardState[invertedToRow][toCol] = checkerToMove;
-            if (canCheckerMoveResult == 2) {
-                boardState[invertedFromRow + (invertedToRow - invertedFromRow) / 2][fromCol + (toCol - fromCol) / 2] = 0;
-            }
 
-            return true;
+        int checkerToMove = boardState[fromRow][fromCol];
+        boardState[fromRow][fromCol] = 0;
+        boardState[toRow][toCol] = checkerToMove;
+        if (canCheckerMoveResult == 2) {
+            boardState[fromRow + (toRow - fromRow) / 2][fromCol + (toCol - fromCol) / 2] = 0;
         }
+
+        return true;
     }
 
     public static int CanCheckerMoveOnce(int fromRow, int fromCol, int toRow, int toCol) {
         if (fromRow >= 0 && fromCol >= 0 && toRow >= 0 && toCol >= 0) {
             int maxPossibleIndex = 7;
             if (fromRow <= maxPossibleIndex && fromCol <= maxPossibleIndex && toRow <= maxPossibleIndex && toCol <= maxPossibleIndex) {
-                int invertedFromRow = 8 - fromRow - 1;
-                int invertedToRow = 8 - toRow - 1;
-                int checkerValue = boardState[invertedFromRow][fromCol];
+                int checkerValue = boardState[fromRow][fromCol];
                 if (checkerValue == 0) {
                     return 0;
-                } else if (boardState[invertedToRow][toCol] != 0) {
+                } else if (boardState[toRow][toCol] != 0) {
                     return 0;
                 } else {
-                    boolean tryMoveOneUp = invertedToRow == invertedFromRow + 1 && Math.abs(toCol - fromCol) == 1;
-                    boolean tryMoveOneDown = invertedToRow == invertedFromRow - 1 && Math.abs(toCol - fromCol) == 1;
-                    boolean tryMoveTwoUpRight = invertedToRow == invertedFromRow + 2 && toCol - fromCol == 2;
-                    boolean tryMoveTwoUpLeft = invertedToRow == invertedFromRow + 2 && toCol - fromCol == -2;
-                    boolean tryMoveTwoDownRight = invertedToRow == invertedFromRow - 2 && toCol - fromCol == 2;
-                    boolean tryMoveTwoDownLeft = invertedToRow == invertedFromRow - 2 && toCol - fromCol == -2;
+                    boolean tryMoveOneUp = toRow == fromRow - 1 && Math.abs(toCol - fromCol) == 1;
+                    boolean tryMoveOneDown = toRow == fromRow + 1 && Math.abs(toCol - fromCol) == 1;
+                    boolean tryMoveTwoUpRight = toRow == fromRow - 2 && toCol - fromCol == 2;
+                    boolean tryMoveTwoUpLeft = toRow == fromRow - 2 && toCol - fromCol == -2;
+                    boolean tryMoveTwoDownRight = toRow == fromRow + 2 && toCol - fromCol == 2;
+                    boolean tryMoveTwoDownLeft = toRow == fromRow + 2 && toCol - fromCol == -2;
                     boolean enemyOnTrace = false;
                     if (whitePosition == Board.CheckersStartPosition.WHITE_ON_BOTTOM) {
                         if (checkerValue == 1) {
@@ -74,12 +74,12 @@ public class Board {
                                 return 1;
                             }
 
-                            enemyOnTrace = boardState[invertedFromRow + 1][fromCol + 1] == 2;
+                            enemyOnTrace = boardState[fromRow - 1][fromCol + 1] == 2;
                             if (tryMoveTwoUpRight && enemyOnTrace) {
                                 return 2;
                             }
 
-                            enemyOnTrace = boardState[invertedFromRow + 1][fromCol - 1] == 2;
+                            enemyOnTrace = boardState[fromRow - 1][fromCol - 1] == 2;
                             if (tryMoveTwoUpLeft && enemyOnTrace) {
                                 return 2;
                             }
@@ -90,12 +90,12 @@ public class Board {
                                 return 1;
                             }
 
-                            enemyOnTrace = boardState[invertedFromRow - 1][fromCol + 1] == 1;
+                            enemyOnTrace = boardState[fromRow + 1][fromCol + 1] == 1;
                             if (tryMoveTwoDownRight && enemyOnTrace) {
                                 return 2;
                             }
 
-                            enemyOnTrace = boardState[invertedFromRow - 1][fromCol - 1] == 1;
+                            enemyOnTrace = boardState[fromRow + 1][fromCol - 1] == 1;
                             if (tryMoveTwoDownLeft && enemyOnTrace) {
                                 return 2;
                             }
@@ -106,12 +106,12 @@ public class Board {
                                 return 1;
                             }
 
-                            enemyOnTrace = boardState[invertedFromRow + 1][fromCol + 1] == 1;
+                            enemyOnTrace = boardState[fromRow - 1][fromCol + 1] == 1;
                             if (tryMoveTwoUpRight && enemyOnTrace) {
                                 return 2;
                             }
 
-                            enemyOnTrace = boardState[invertedFromRow + 1][fromCol - 1] == 1;
+                            enemyOnTrace = boardState[fromRow - 1][fromCol - 1] == 1;
                             if (tryMoveTwoUpLeft && enemyOnTrace) {
                                 return 2;
                             }
@@ -122,12 +122,12 @@ public class Board {
                                 return 1;
                             }
 
-                            enemyOnTrace = boardState[invertedFromRow - 1][fromCol + 1] == 2;
+                            enemyOnTrace = boardState[fromRow + 1][fromCol + 1] == 2;
                             if (tryMoveTwoDownRight && enemyOnTrace) {
                                 return 2;
                             }
 
-                            enemyOnTrace = boardState[invertedFromRow - 1][fromCol - 1] == 2;
+                            enemyOnTrace = boardState[fromRow + 1][fromCol - 1] == 2;
                             if (tryMoveTwoDownLeft && enemyOnTrace) {
                                 return 2;
                             }
@@ -165,12 +165,8 @@ public class Board {
 
     }
 
-    static {
-        whitePosition = Board.CheckersStartPosition.WHITE_ON_BOTTOM;
-    }
-
-    public static enum CheckersStartPosition {
+    public enum CheckersStartPosition {
         WHITE_ON_TOP,
-        WHITE_ON_BOTTOM;
+        WHITE_ON_BOTTOM
     }
 }
