@@ -2,14 +2,20 @@ package Checkers_Tactics.Environment;
 
 public class Board
 {
-    private static final int NUM_OF_TILES = 8;
-    private static final int ROWS_PER_COLOR = 3;
+    public static final int NUM_OF_TILES = 8;
+    public static final int ROWS_PER_COLOR = 3;
     //orientation: from top left to bottom right
-    private static final int[][] boardState = new int[NUM_OF_TILES][NUM_OF_TILES];
+    //0 - pusty, 1 - biała figura, 2 - czarna figura
+    public static final int[][] boardState = new int[NUM_OF_TILES][NUM_OF_TILES];
     private static CheckersStartPosition whitePosition = Board.CheckersStartPosition.WHITE_ON_BOTTOM;
 
     public static boolean Initialize(CheckersStartPosition whitePosition)
     {
+        //clear board
+        for (int row = 0; row < NUM_OF_TILES; row++)
+            for (int col = 0; col < NUM_OF_TILES; col++)
+                boardState[row][col] = 0;
+
         Board.whitePosition = whitePosition;
         int startBottomPos = 5;
         int endBottomPos = startBottomPos + ROWS_PER_COLOR;
@@ -48,6 +54,13 @@ public class Board
         return true;
     }
 
+    /**
+    Zwraca informacje o ruchu pionka z punktu do punktu
+
+    @return {@code 0} - jeśli ruch jest niemożliwy,
+    {@code 1} - jeśli ruch jest możliwy i NIE MA bicia pionka
+    {@code 2} - jeśli ruch jest możliwy i JEST bicie pionka
+     */
     public static int CanCheckerMoveOnce(int fromRow, int fromCol, int toRow, int toCol)
     {
         //move outside the board
@@ -81,11 +94,11 @@ public class Board
                 if (tryMoveOneUp)
                     return 1;
 
-                enemyOnTrace = boardState[fromRow - 1][fromCol + 1] == 2;
+                enemyOnTrace = isEnemyOnTile(fromRow - 1, fromCol + 1, 2);
                 if (tryMoveTwoUpRight && enemyOnTrace)
                     return 2;
 
-                enemyOnTrace = boardState[fromRow - 1][fromCol - 1] == 2;
+                enemyOnTrace = isEnemyOnTile(fromRow - 1, fromCol - 1, 2);
                 if (tryMoveTwoUpLeft && enemyOnTrace)
                     return 2;
             }
@@ -95,11 +108,11 @@ public class Board
                 if (tryMoveOneDown)
                     return 1;
 
-                enemyOnTrace = boardState[fromRow + 1][fromCol + 1] == 1;
+                enemyOnTrace = isEnemyOnTile(fromRow + 1, fromCol + 1, 1);
                 if (tryMoveTwoDownRight && enemyOnTrace)
                     return 2;
 
-                enemyOnTrace = boardState[fromRow + 1][fromCol - 1] == 1;
+                enemyOnTrace = isEnemyOnTile(fromRow + 1, fromCol - 1, 1);
                 if (tryMoveTwoDownLeft && enemyOnTrace)
                     return 2;
             }
@@ -112,11 +125,11 @@ public class Board
             if (tryMoveOneUp)
                 return 1;
 
-            enemyOnTrace = boardState[fromRow - 1][fromCol + 1] == 1;
+            enemyOnTrace = isEnemyOnTile(fromRow - 1, fromCol + 1, 1);;
             if (tryMoveTwoUpRight && enemyOnTrace)
                 return 2;
 
-            enemyOnTrace = boardState[fromRow - 1][fromCol - 1] == 1;
+            enemyOnTrace = isEnemyOnTile(fromRow - 1, fromCol - 1, 1);;
             if (tryMoveTwoUpLeft && enemyOnTrace)
                 return 2;
         }
@@ -126,16 +139,26 @@ public class Board
             if (tryMoveOneDown)
                 return 1;
 
-            enemyOnTrace = boardState[fromRow + 1][fromCol + 1] == 2;
+            enemyOnTrace = isEnemyOnTile(fromRow + 1, fromCol + 1, 2);;
             if (tryMoveTwoDownRight && enemyOnTrace)
                 return 2;
 
-            enemyOnTrace = boardState[fromRow + 1][fromCol - 1] == 2;
+            enemyOnTrace = isEnemyOnTile(fromRow + 1, fromCol - 1, 2);;
             if (tryMoveTwoDownLeft && enemyOnTrace)
                 return 2;
         }
 
         return 0;
+    }
+
+    private static boolean isEnemyOnTile(int row, int col, int enemyNum)
+    {
+        if(row < 0 || col < 0)
+            return false;
+        if(row > NUM_OF_TILES - 1 || col > NUM_OF_TILES - 1)
+            return false;
+
+        return boardState[row][col] == enemyNum;
     }
 
     public static void Preview()
