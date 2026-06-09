@@ -1,4 +1,4 @@
-package Checkers_Tactics;
+package com.checkerstactics;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
