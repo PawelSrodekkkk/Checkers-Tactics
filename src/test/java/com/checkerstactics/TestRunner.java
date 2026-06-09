@@ -80,11 +80,11 @@ public class TestRunner {
      // Stworzenie wewnętrznej reprezentacji planszy i pionków.
 
     private static void environment_shouldContainBoardClass() {
-        assertClassExists("Checkers_Tactics.Environment.Board");
+        assertClassExists("Environment.Board");
     }
 
     private static void environment_boardShouldContainBasicMethods() {
-        Class<?> boardClass = getClassByName("Checkers_Tactics.Environment.Board");
+        Class<?> boardClass = getClassByName("Environment.Board");
 
         assertHasMethod(boardClass, "Initialize", Board.CheckersStartPosition.class);
         assertHasMethod(boardClass, "MoveCheckerOnce", int.class, int.class, int.class, int.class);
@@ -96,7 +96,7 @@ public class TestRunner {
 
 
     private static void gui_shouldContainCheckersGuiClass() {
-        assertClassExists("Checkers_Tactics.gui.CheckersGUI");
+        assertClassExists("gui.CheckersGUI");
     }
 
     /*
@@ -104,11 +104,11 @@ public class TestRunner {
      */
 
     private static void network_shouldContainGuestConnectionClass() {
-        assertClassExists("Checkers_Tactics.network.GuestConnection");
+        assertClassExists("network.GuestConnection");
     }
 
     private static void network_shouldContainHostConnectionClass() {
-        assertClassExists("Checkers_Tactics.network.HostConnection");
+        assertClassExists("network.HostConnection");
     }
 
     private static void network_shouldUseJavaSockets() {
