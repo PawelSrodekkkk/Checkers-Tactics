@@ -1,5 +1,7 @@
 package com.checkerstactics;
 
+import Checkers_Tactics.Environment.Board;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
@@ -9,49 +11,37 @@ public class TestRunner {
         int passed = 0;
         int failed = 0;
 
-        if (runTest("boardRepresentation_shouldContainBoardClass", TestRunner::boardRepresentation_shouldContainBoardClass)) {
+        //ENVIRONMENT SECTION//////////////////////////////////////////////////
+
+        if (runTest("environment_shouldContainBoardClass", TestRunner::environment_shouldContainBoardClass)) {
             passed++;
         } else {
             failed++;
         }
 
-        if (runTest("boardRepresentation_shouldContainPieceClass", TestRunner::boardRepresentation_shouldContainPieceClass)) {
+        if (runTest("environment_boardShouldContainBasicMethods", TestRunner::environment_boardShouldContainBasicMethods)) {
             passed++;
         } else {
             failed++;
         }
 
-        if (runTest("boardRepresentation_boardShouldExposeBasicBoardMethods", TestRunner::boardRepresentation_boardShouldExposeBasicBoardMethods)) {
+        //GUI SECTION//////////////////////////////////////////////////
+
+        if (runTest("gui_shouldContainCheckersGUIClass", TestRunner::gui_shouldContainCheckersGuiClass)) {
             passed++;
         } else {
             failed++;
         }
 
-        if (runTest("gui_shouldContainMainWindowClass", TestRunner::gui_shouldContainMainWindowClass)) {
+        //NETWORK SECTION//////////////////////////////////////////////////
+
+        if (runTest("network_shouldContainGuestConnectionClass", TestRunner::network_shouldContainGuestConnectionClass)) {
             passed++;
         } else {
             failed++;
         }
 
-        if (runTest("gui_shouldContainBoardPanelClass", TestRunner::gui_shouldContainBoardPanelClass)) {
-            passed++;
-        } else {
-            failed++;
-        }
-
-        if (runTest("gui_mainWindowShouldBeSwingFrame", TestRunner::gui_mainWindowShouldBeSwingFrame)) {
-            passed++;
-        } else {
-            failed++;
-        }
-
-        if (runTest("network_shouldContainSocketClientClass", TestRunner::network_shouldContainSocketClientClass)) {
-            passed++;
-        } else {
-            failed++;
-        }
-
-        if (runTest("network_shouldContainSocketServerClass", TestRunner::network_shouldContainSocketServerClass)) {
+        if (runTest("network_shouldContainHostConnectionClass", TestRunner::network_shouldContainHostConnectionClass)) {
             passed++;
         } else {
             failed++;
@@ -62,6 +52,8 @@ public class TestRunner {
         } else {
             failed++;
         }
+
+        //FINALIZE
 
         System.out.println();
         System.out.println("Test results:");
@@ -87,52 +79,36 @@ public class TestRunner {
 
      // Stworzenie wewnętrznej reprezentacji planszy i pionków.
 
-    private static void boardRepresentation_shouldContainBoardClass() {
-        assertClassExists("com.checkerstactics.board.Board");
+    private static void environment_shouldContainBoardClass() {
+        assertClassExists("Checkers_Tactics.Environment.Board");
     }
 
-    private static void boardRepresentation_shouldContainPieceClass() {
-        assertClassExists("com.checkerstactics.board.Piece");
-    }
+    private static void environment_boardShouldContainBasicMethods() {
+        Class<?> boardClass = getClassByName("Checkers_Tactics.Environment.Board");
 
-    private static void boardRepresentation_boardShouldExposeBasicBoardMethods() {
-        Class<?> boardClass = getClassByName("com.checkerstactics.board.Board");
-
-        assertHasMethod(boardClass, "getRows");
-        assertHasMethod(boardClass, "getColumns");
-        assertHasMethod(boardClass, "getPiece", int.class, int.class);
+        assertHasMethod(boardClass, "Initialize", Board.CheckersStartPosition.class);
+        assertHasMethod(boardClass, "MoveCheckerOnce", int.class, int.class, int.class, int.class);
+        assertHasMethod(boardClass, "CanCheckerMoveOnce", int.class, int.class, int.class, int.class);
     }
 
      // 2. GUI - inicjalizacja głównego okna, narysowanie szachownicy i pionków.
 
 
-    private static void gui_shouldContainMainWindowClass() {
-        assertClassExists("com.checkerstactics.gui.MainWindow");
-    }
 
-    private static void gui_shouldContainBoardPanelClass() {
-        assertClassExists("com.checkerstactics.gui.BoardPanel");
-    }
-
-    private static void gui_mainWindowShouldBeSwingFrame() {
-        Class<?> mainWindowClass = getClassByName("com.checkerstactics.gui.MainWindow");
-
-        assertTrue(
-                javax.swing.JFrame.class.isAssignableFrom(mainWindowClass),
-                "MainWindow should extend javax.swing.JFrame"
-        );
+    private static void gui_shouldContainCheckersGuiClass() {
+        assertClassExists("Checkers_Tactics.gui.CheckersGUI");
     }
 
     /*
      * 3. Zaprojektowanie komunikacji socketowej w Javie.
      */
 
-    private static void network_shouldContainSocketClientClass() {
-        assertClassExists("com.checkerstactics.network.SocketClient");
+    private static void network_shouldContainGuestConnectionClass() {
+        assertClassExists("Checkers_Tactics.network.GuestConnection");
     }
 
-    private static void network_shouldContainSocketServerClass() {
-        assertClassExists("com.checkerstactics.network.SocketServer");
+    private static void network_shouldContainHostConnectionClass() {
+        assertClassExists("Checkers_Tactics.network.HostConnection");
     }
 
     private static void network_shouldUseJavaSockets() {
