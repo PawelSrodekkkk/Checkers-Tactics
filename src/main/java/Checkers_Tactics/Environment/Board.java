@@ -121,8 +121,8 @@ public class Board
 
             return 0;
         } else {
-            boolean movesUp = (whitePosition == CheckersStartPosition.WHITE_ON_BOTTOM ? isWhite : !isWhite);
-            boolean movesDown = (whitePosition == CheckersStartPosition.WHITE_ON_BOTTOM ? !isWhite : isWhite);
+            boolean movesUp = ((whitePosition == CheckersStartPosition.WHITE_ON_BOTTOM) == isWhite);
+            boolean movesDown = ((whitePosition == CheckersStartPosition.WHITE_ON_BOTTOM) != isWhite);
 
             if (dist == 1) {
                 if (movesUp && rowDir == -1) return 1;
