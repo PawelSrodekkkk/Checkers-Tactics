@@ -46,7 +46,6 @@ public class Board
         boardState[fromRow][fromCol] = 0;
         boardState[toRow][toCol] = checkerToMove;
 
-        // Usunięcie zbitej figury po drodze (teraz radzi sobie z dalekimi odległościami Latającej Damki)
         if (canCheckerMoveResult == 2)
         {
             int rowDir = Integer.compare(toRow, fromRow);
@@ -62,7 +61,6 @@ public class Board
             }
         }
 
-        // Promocja na damkę, jeśli pionek dotarł na koniec planszy
         if (checkerToMove == 1) {
             int promotionRow = (whitePosition == CheckersStartPosition.WHITE_ON_BOTTOM) ? 0 : NUM_OF_TILES - 1;
             if (toRow == promotionRow) boardState[toRow][toCol] = 3;
@@ -87,18 +85,16 @@ public class Board
         int rowDiff = Math.abs(toRow - fromRow);
         int colDiff = Math.abs(toCol - fromCol);
 
-        // Każdy ruch MUSI być po przekątnej
         if (rowDiff != colDiff) return 0;
 
         int dist = rowDiff;
-        int rowDir = Integer.compare(toRow, fromRow); // daje nam -1 lub 1
-        int colDir = Integer.compare(toCol, fromCol); // daje nam -1 lub 1
+        int rowDir = Integer.compare(toRow, fromRow);
+        int colDir = Integer.compare(toCol, fromCol);
 
         boolean isWhite = (checkerValue == 1 || checkerValue == 3);
         boolean isKing = (checkerValue == 3 || checkerValue == 4);
 
         if (isKing) {
-            // Logika latającej damki
             int piecesInBetween = 0;
             int enemyRow = -1;
             int enemyCol = -1;
@@ -106,7 +102,6 @@ public class Board
             int r = fromRow + rowDir;
             int c = fromCol + colDir;
 
-            // Sprawdzamy trasę lotu
             while (r != toRow && c != toCol) {
                 if (boardState[r][c] != 0) {
                     piecesInBetween++;
@@ -117,16 +112,15 @@ public class Board
                 c += colDir;
             }
 
-            if (piecesInBetween == 0) return 1; // Zwykły ruch przelotowy
-            if (piecesInBetween == 1) { // Dokładnie jedna figura na drodze
+            if (piecesInBetween == 0) return 1;
+            if (piecesInBetween == 1) {
                 if (isEnemyOnTile(enemyRow, enemyCol, checkerValue)) {
-                    return 2; // Bicie
+                    return 2;
                 }
             }
 
-            return 0; // Skok nad swoimi lub zablokowana ścieżka
+            return 0;
         } else {
-            // Zwykły pionek
             boolean movesUp = (whitePosition == CheckersStartPosition.WHITE_ON_BOTTOM ? isWhite : !isWhite);
             boolean movesDown = (whitePosition == CheckersStartPosition.WHITE_ON_BOTTOM ? !isWhite : isWhite);
 
@@ -134,9 +128,9 @@ public class Board
                 if (movesUp && rowDir == -1) return 1;
                 if (movesDown && rowDir == 1) return 1;
             } else if (dist == 2) {
-                // Skok przez wroga
-                if (movesUp && rowDir == -1 && isEnemyOnTile(fromRow - 1, fromCol + colDir, checkerValue)) return 2;
-                if (movesDown && rowDir == 1 && isEnemyOnTile(fromRow + 1, fromCol + colDir, checkerValue)) return 2;
+                if (isEnemyOnTile(fromRow + rowDir, fromCol + colDir, checkerValue)) {
+                    return 2;
+                }
             }
 
             return 0;
@@ -152,17 +146,13 @@ public class Board
         int[][] directions = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
 
         if (isKing) {
-            // Damka potrafi bić z daleka
             for (int[] d : directions) {
                 int r = row + d[0];
                 int c = col + d[1];
 
-                // Idziemy po przekątnej dopóki nie natrafimy na krawędź planszy
                 while (r >= 0 && r < NUM_OF_TILES && c >= 0 && c < NUM_OF_TILES) {
                     if (boardState[r][c] != 0) {
-                        // Ktoś tu stoi. Czy to wróg?
                         if (isEnemyOnTile(r, c, checkerValue)) {
-                            // Sprawdzamy czy pole ZARAZ ZA WROGIEM jest puste (żeby mogła wylądować)
                             int landR = r + d[0];
                             int landC = c + d[1];
                             if (landR >= 0 && landR < NUM_OF_TILES && landC >= 0 && landC < NUM_OF_TILES) {
@@ -171,23 +161,16 @@ public class Board
                                 }
                             }
                         }
-                        break; // Pierwsza napotkana figura wszystko blokuje - kończymy szukanie w tym kierunku
+                        break;
                     }
                     r += d[0];
                     c += d[1];
                 }
             }
         } else {
-            // Zwykły pionek musi szukać wroga w odległości 2
-            boolean isWhite = (checkerValue == 1);
-            boolean movesUp = (whitePosition == CheckersStartPosition.WHITE_ON_BOTTOM ? isWhite : !isWhite);
-            boolean movesDown = (whitePosition == CheckersStartPosition.WHITE_ON_BOTTOM ? !isWhite : isWhite);
-
             for (int[] d : directions) {
-                if ((movesUp && d[0] == -1) || (movesDown && d[0] == 1)) {
-                    if (CanCheckerMoveOnce(row, col, row + d[0] * 2, col + d[1] * 2) == 2) {
-                        return true;
-                    }
+                if (CanCheckerMoveOnce(row, col, row + d[0] * 2, col + d[1] * 2) == 2) {
+                    return true;
                 }
             }
         }
