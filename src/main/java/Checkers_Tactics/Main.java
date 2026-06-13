@@ -1,7 +1,7 @@
 package Checkers_Tactics;
 
 
-import Checkers_Tactics.gui.CheckersGUI;
+import Checkers_Tactics.gui.MainMenu;
 import Checkers_Tactics.network.*;
 
 import javax.swing.*;
@@ -34,8 +34,8 @@ public class Main {
                 testGuestCommunication(guestConnection);
             } else if ("3".equals(choice)) {
                 SwingUtilities.invokeLater(() -> {
-                    CheckersGUI gui = new CheckersGUI();
-                    gui.setVisible(true);
+                    MainMenu menu = new MainMenu();
+                    menu.setVisible(true);
                 });
             } else {
                 System.out.println("Niepoprawny wybor");
