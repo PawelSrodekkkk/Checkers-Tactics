@@ -13,6 +13,7 @@ public class CheckersGUI extends JFrame {
     private final JLabel whiteTimeLabel;
     private final JLabel blackTimeLabel;
 
+    private Timer timer;
     private int whiteSeconds = 0;
     private int blackSeconds = 0;
 
@@ -23,6 +24,14 @@ public class CheckersGUI extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
         getContentPane().setBackground(new Color(51, 49, 43));
+
+        JMenuBar menuBar = new JMenuBar();
+        JMenu gameMenu = new JMenu("Opcje");
+        JMenuItem returnItem = new JMenuItem("Wróć do Menu Głównego");
+        returnItem.addActionListener(e -> returnToMenu());
+        gameMenu.add(returnItem);
+        menuBar.add(gameMenu);
+        setJMenuBar(menuBar);
 
         Board.Initialize(Board.CheckersStartPosition.WHITE_ON_BOTTOM);
 
@@ -62,7 +71,7 @@ public class CheckersGUI extends JFrame {
     }
 
     private void startTimer() {
-        Timer timer = new Timer(1000, e -> {
+         timer = new Timer(1000, e -> {
             if (currentPlayer == 1) {
                 whiteSeconds++;
                 whiteTimeLabel.setText(String.format("%02d:%02d", whiteSeconds / 60, whiteSeconds % 60));
@@ -87,5 +96,43 @@ public class CheckersGUI extends JFrame {
 
     public int getCurrentPlayer() {
         return currentPlayer;
+    }
+
+    public void checkWinCondition() {
+        if (!Board.HasAnyValidMoves(currentPlayer)) {
+            if (timer != null) timer.stop();
+
+            Timer delayTimer = new Timer(300, e -> {
+                int winner = (currentPlayer == 1) ? 2 : 1;
+                String winnerName = (winner == 1) ? "Białe" : "Czarne";
+
+                Object[] options = {"Wróć do Menu", "Wyjdź z gry"};
+                int choice = JOptionPane.showOptionDialog(this,
+                        "Wygrywają " + winnerName + "!\nGratulacje!",
+                        "Koniec Gry!",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.PLAIN_MESSAGE,
+                        null,
+                        options,
+                        options[0]);
+
+                if (choice == 0) {
+                    returnToMenu();
+                } else {
+                    System.exit(0);
+                }
+            });
+
+            delayTimer.setRepeats(false);
+            delayTimer.start();
+        }
+    }
+    public void returnToMenu() {
+        if (timer != null) timer.stop();
+        this.dispose();
+        SwingUtilities.invokeLater(() -> {
+            MainMenu menu = new MainMenu();
+            menu.setVisible(true);
+        });
     }
 }

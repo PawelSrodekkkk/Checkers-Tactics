@@ -105,6 +105,8 @@ public class BoardPanel extends JPanel {
         selectedCol = -1;
         isJumpingSequence = false;
         parentGUI.switchPlayer();
+
+        parentGUI.checkWinCondition();
     }
 
     private boolean isCurrentPlayerPiece(int pieceType) {
