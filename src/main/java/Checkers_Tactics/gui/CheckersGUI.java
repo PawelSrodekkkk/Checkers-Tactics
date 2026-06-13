@@ -1,5 +1,7 @@
 package Checkers_Tactics.gui;
 
+import Checkers_Tactics.Environment.Board;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -15,9 +17,6 @@ public class CheckersGUI extends JFrame {
     private BufferedImage boardImage;
     private BufferedImage whitePieceImage;
     private BufferedImage blackPieceImage;
-
-    // 0 = puste pole, 1 = biały pionek, 2 = czarny pionek
-    private final int[][] boardState = new int[NUM_OF_TILES][NUM_OF_TILES];
 
     private int selectedRow = -1;
     private int selectedCol = -1;
@@ -37,43 +36,9 @@ public class CheckersGUI extends JFrame {
         } catch (IOException e) {
             System.out.println("Błąd podczas ładowania grafik: " + e.getMessage());
         }
-        setupTestBoard(); // na razie dane są wpisane z palca
+        Board.Initialize(Board.CheckersStartPosition.WHITE_ON_BOTTOM);
 
         add(new BoardPanel());
-    }
-
-    private void setupTestBoard() {
-        // Czarne:
-        boardState[0][0] = 2;
-        boardState[0][2] = 2;
-        boardState[0][4] = 2;
-        boardState[0][6] = 2;
-
-        boardState[1][1] = 2;
-        boardState[1][3] = 2;
-        boardState[1][5] = 2;
-        boardState[1][7] = 2;
-
-        boardState[2][0] = 2;
-        boardState[2][2] = 2;
-        boardState[2][4] = 2;
-        boardState[2][6] = 2;
-
-        // Białe:
-        boardState[5][1] = 1;
-        boardState[5][3] = 1;
-        boardState[5][5] = 1;
-        boardState[5][7] = 1;
-
-        boardState[6][0] = 1;
-        boardState[6][2] = 1;
-        boardState[6][4] = 1;
-        boardState[6][6] = 1;
-
-        boardState[7][1] = 1;
-        boardState[7][3] = 1;
-        boardState[7][5] = 1;
-        boardState[7][7] = 1;
     }
 
     private class BoardPanel extends JPanel {
@@ -90,7 +55,7 @@ public class CheckersGUI extends JFrame {
                     if (col < 0 || col > NUM_OF_TILES - 1 || row < 0 || row > NUM_OF_TILES - 1) return;
 
                     if (selectedRow == -1) {
-                        if (boardState[row][col] != 0) {
+                        if (Board.boardState[row][col] != 0) {
                             selectedRow = row;
                             selectedCol = col;
                         }
@@ -99,11 +64,18 @@ public class CheckersGUI extends JFrame {
                             selectedRow = -1;
                             selectedCol = -1;
                         } else {
-                            boardState[row][col] = boardState[selectedRow][selectedCol];
-                            boardState[selectedRow][selectedCol] = 0;
-
-                            selectedRow = -1;
-                            selectedCol = -1;
+                            if (Board.MoveCheckerOnce(selectedRow, selectedCol, row, col)) {
+                                selectedRow = -1;
+                                selectedCol = -1;
+                            } else {
+                                if (Board.boardState[row][col] != 0) {
+                                    selectedRow = row;
+                                    selectedCol = col;
+                                } else {
+                                    selectedRow = -1;
+                                    selectedCol = -1;
+                                }
+                            }
                         }
                     }
                     repaint();
@@ -149,7 +121,7 @@ public class CheckersGUI extends JFrame {
 
             for (int row = 0; row < NUM_OF_TILES; row++) {
                 for (int col = 0; col < NUM_OF_TILES; col++) {
-                    int pieceType = boardState[row][col];
+                    int pieceType = Board.boardState[row][col];
 
                     if (pieceType != 0) {
                         double tileCenterX = (col * tileWidth) + (tileWidth / 2.0);
