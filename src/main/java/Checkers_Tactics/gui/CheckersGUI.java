@@ -8,7 +8,6 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -21,24 +20,66 @@ public class CheckersGUI extends JFrame {
     private int selectedRow = -1;
     private int selectedCol = -1;
 
-    public CheckersGUI() {
+    private int currentPlayer = 1;
+    private JLabel turnLabel;
+    private JLabel timeLabel;
+    private Timer timer;
+    private int elapsedSeconds = 0;
 
+    public CheckersGUI() {
         setTitle("Checkers Tactics");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(800, 800);
+        setSize(800, 850);
         setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
 
         try {
             boardImage = ImageIO.read(new File("src/images/chessboard.png"));
-
             whitePieceImage = ImageIO.read(new File("src/images/whitePiece.png"));
             blackPieceImage = ImageIO.read(new File("src/images/blackPiece.png"));
         } catch (IOException e) {
             System.out.println("Błąd podczas ładowania grafik: " + e.getMessage());
         }
+
         Board.Initialize(Board.CheckersStartPosition.WHITE_ON_BOTTOM);
 
-        add(new BoardPanel());
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(new Color(51, 49, 43));
+        topPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+
+        turnLabel = new JLabel("Ruch: Białe", SwingConstants.CENTER);
+        turnLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
+        turnLabel.setForeground(Color.WHITE);
+
+        timeLabel = new JLabel("00:00", SwingConstants.RIGHT);
+        timeLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
+        timeLabel.setForeground(Color.WHITE);
+
+        topPanel.add(turnLabel, BorderLayout.CENTER);
+        topPanel.add(timeLabel, BorderLayout.EAST);
+
+        add(topPanel, BorderLayout.NORTH);
+        add(new BoardPanel(), BorderLayout.CENTER);
+
+        startTimer();
+    }
+
+    private void startTimer() {
+        timer = new Timer(1000, e -> {
+            elapsedSeconds++;
+            int minutes = elapsedSeconds / 60;
+            int seconds = elapsedSeconds % 60;
+            timeLabel.setText(String.format("%02d:%02d", minutes, seconds));
+        });
+        timer.start();
+    }
+
+    private void updateTurnLabel() {
+        if (currentPlayer == 1) {
+            turnLabel.setText("Ruch: Białe");
+        } else {
+            turnLabel.setText("Ruch: Czarne");
+        }
     }
 
     private class BoardPanel extends JPanel {
@@ -55,7 +96,7 @@ public class CheckersGUI extends JFrame {
                     if (col < 0 || col > NUM_OF_TILES - 1 || row < 0 || row > NUM_OF_TILES - 1) return;
 
                     if (selectedRow == -1) {
-                        if (Board.boardState[row][col] != 0) {
+                        if (Board.boardState[row][col] == currentPlayer) {
                             selectedRow = row;
                             selectedCol = col;
                         }
@@ -67,8 +108,11 @@ public class CheckersGUI extends JFrame {
                             if (Board.MoveCheckerOnce(selectedRow, selectedCol, row, col)) {
                                 selectedRow = -1;
                                 selectedCol = -1;
+
+                                currentPlayer = (currentPlayer == 1) ? 2 : 1;
+                                updateTurnLabel();
                             } else {
-                                if (Board.boardState[row][col] != 0) {
+                                if (Board.boardState[row][col] == currentPlayer) {
                                     selectedRow = row;
                                     selectedCol = col;
                                 } else {
@@ -117,6 +161,25 @@ public class CheckersGUI extends JFrame {
 
                 g2d.setColor(new Color(0, 255, 0, 80));
                 g2d.fillOval(hX, hY, (int) Math.round(highlightWidth), (int) Math.round(highlightHeight));
+
+                g2d.setColor(new Color(186, 186, 186, 180));
+                double moveHighlightRatio = 0.2;
+                double moveHighlightWidth = tileWidth * moveHighlightRatio;
+                double moveHighlightHeight = tileHeight * moveHighlightRatio;
+
+                for (int r = 0; r < NUM_OF_TILES; r++) {
+                    for (int c = 0; c < NUM_OF_TILES; c++) {
+                        if (Board.CanCheckerMoveOnce(selectedRow, selectedCol, r, c) > 0) {
+                            double targetCenterX = (c * tileWidth) + (tileWidth / 2.0);
+                            double targetCenterY = (r * tileHeight) + (tileHeight / 2.0);
+
+                            int thX = (int) Math.round(targetCenterX - (moveHighlightWidth / 2.0));
+                            int thY = (int) Math.round(targetCenterY - (moveHighlightHeight / 2.0));
+
+                            g2d.fillOval(thX, thY, (int) Math.round(moveHighlightWidth), (int) Math.round(moveHighlightHeight));
+                        }
+                    }
+                }
             }
 
             for (int row = 0; row < NUM_OF_TILES; row++) {
