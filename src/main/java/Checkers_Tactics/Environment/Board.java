@@ -215,4 +215,29 @@ public class Board
     public enum CheckersStartPosition {
         WHITE_ON_TOP, WHITE_ON_BOTTOM
     }
+    /**
+     * Sprawdza, czy dany gracz ma jakikolwiek dozwolony ruch (lub czy w ogóle ma pionki).
+     * @param player 1 dla Białych, 2 dla Czarnych
+     */
+    public static boolean HasAnyValidMoves(int player) {
+        for (int r = 0; r < NUM_OF_TILES; r++) {
+            for (int c = 0; c < NUM_OF_TILES; c++) {
+                int piece = boardState[r][c];
+                if (piece == 0) continue;
+
+                boolean isCurrentPlayer = (player == 1) ? (piece == 1 || piece == 3) : (piece == 2 || piece == 4);
+
+                if (isCurrentPlayer) {
+                    for (int tr = 0; tr < NUM_OF_TILES; tr++) {
+                        for (int tc = 0; tc < NUM_OF_TILES; tc++) {
+                            if (CanCheckerMoveOnce(r, c, tr, tc) > 0) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
 }
