@@ -16,20 +16,28 @@ public class CheckersGUI extends JFrame {
     private BufferedImage boardImage;
     private BufferedImage whitePieceImage;
     private BufferedImage blackPieceImage;
+    private BufferedImage whiteQueenImage;
+    private BufferedImage blackQueenImage;
 
     private int selectedRow = -1;
     private int selectedCol = -1;
 
     private int currentPlayer = 1;
-    private JLabel turnLabel;
-    private JLabel timeLabel;
+    private boolean isJumpingSequence = false;
+
+    private JLabel whiteTurnLabel;
+    private JLabel blackTurnLabel;
+    private JLabel whiteTimeLabel;
+    private JLabel blackTimeLabel;
+
     private Timer timer;
-    private int elapsedSeconds = 0;
+    private int whiteSeconds = 0;
+    private int blackSeconds = 0;
 
     public CheckersGUI() {
         setTitle("Checkers Tactics");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(800, 850);
+        setSize(800, 900);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
@@ -37,53 +45,87 @@ public class CheckersGUI extends JFrame {
             boardImage = ImageIO.read(new File("src/images/chessboard.png"));
             whitePieceImage = ImageIO.read(new File("src/images/whitePiece.png"));
             blackPieceImage = ImageIO.read(new File("src/images/blackPiece.png"));
+            whiteQueenImage = ImageIO.read(new File("src/images/whiteQueen.png"));
+            blackQueenImage = ImageIO.read(new File("src/images/blackQueen.png"));
         } catch (IOException e) {
             System.out.println("Błąd podczas ładowania grafik: " + e.getMessage());
         }
 
         Board.Initialize(Board.CheckersStartPosition.WHITE_ON_BOTTOM);
 
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBackground(new Color(51, 49, 43));
-        topPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        JPanel topPanel = createPlayerPanel("Czarne");
+        blackTurnLabel = (JLabel) topPanel.getComponent(0);
+        blackTimeLabel = (JLabel) topPanel.getComponent(1);
 
-        turnLabel = new JLabel("Ruch: Białe", SwingConstants.CENTER);
-        turnLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
-        turnLabel.setForeground(Color.WHITE);
-
-        timeLabel = new JLabel("00:00", SwingConstants.RIGHT);
-        timeLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
-        timeLabel.setForeground(Color.WHITE);
-
-        topPanel.add(turnLabel, BorderLayout.CENTER);
-        topPanel.add(timeLabel, BorderLayout.EAST);
+        JPanel bottomPanel = createPlayerPanel("Białe (Twój ruch)");
+        whiteTurnLabel = (JLabel) bottomPanel.getComponent(0);
+        whiteTimeLabel = (JLabel) bottomPanel.getComponent(1);
 
         add(topPanel, BorderLayout.NORTH);
         add(new BoardPanel(), BorderLayout.CENTER);
+        add(bottomPanel, BorderLayout.SOUTH);
 
         startTimer();
     }
 
+    private JPanel createPlayerPanel(String defaultText) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(51, 49, 43));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+
+        JLabel turnLabel = new JLabel(defaultText, SwingConstants.LEFT);
+        turnLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
+        turnLabel.setForeground(Color.WHITE);
+
+        JLabel timeLabel = new JLabel("00:00", SwingConstants.RIGHT);
+        timeLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
+        timeLabel.setForeground(Color.WHITE);
+
+        panel.add(turnLabel, BorderLayout.WEST);
+        panel.add(timeLabel, BorderLayout.EAST);
+        return panel;
+    }
+
     private void startTimer() {
         timer = new Timer(1000, e -> {
-            elapsedSeconds++;
-            int minutes = elapsedSeconds / 60;
-            int seconds = elapsedSeconds % 60;
-            timeLabel.setText(String.format("%02d:%02d", minutes, seconds));
+            if (currentPlayer == 1) {
+                whiteSeconds++;
+                whiteTimeLabel.setText(String.format("%02d:%02d", whiteSeconds / 60, whiteSeconds % 60));
+            } else {
+                blackSeconds++;
+                blackTimeLabel.setText(String.format("%02d:%02d", blackSeconds / 60, blackSeconds % 60));
+            }
         });
         timer.start();
     }
 
-    private void updateTurnLabel() {
+    private void updateTurnUI() {
         if (currentPlayer == 1) {
-            turnLabel.setText("Ruch: Białe");
+            whiteTurnLabel.setText("Białe (Twój ruch)");
+            blackTurnLabel.setText("Czarne");
         } else {
-            turnLabel.setText("Ruch: Czarne");
+            whiteTurnLabel.setText("Białe");
+            blackTurnLabel.setText("Czarne (Twój ruch)");
         }
+    }
+
+    private void endTurn() {
+        selectedRow = -1;
+        selectedCol = -1;
+        isJumpingSequence = false;
+        currentPlayer = (currentPlayer == 1) ? 2 : 1;
+        updateTurnUI();
+    }
+
+    private boolean isCurrentPlayerPiece(int pieceType) {
+        if (currentPlayer == 1) return pieceType == 1 || pieceType == 3;
+        if (currentPlayer == 2) return pieceType == 2 || pieceType == 4;
+        return false;
     }
 
     private class BoardPanel extends JPanel {
         public BoardPanel() {
+            setBackground(new Color(51, 49, 43));
             addMouseListener(new MouseAdapter() {
                 @Override
                 public void mousePressed(MouseEvent e) {
@@ -95,29 +137,46 @@ public class CheckersGUI extends JFrame {
 
                     if (col < 0 || col > NUM_OF_TILES - 1 || row < 0 || row > NUM_OF_TILES - 1) return;
 
-                    if (selectedRow == -1) {
-                        if (Board.boardState[row][col] == currentPlayer) {
-                            selectedRow = row;
-                            selectedCol = col;
+                    if (isJumpingSequence) {
+                        int moveResult = Board.MoveCheckerOnce(selectedRow, selectedCol, row, col);
+                        if (moveResult == 2) {
+                            if (Board.HasAnyJumps(row, col)) {
+                                selectedRow = row;
+                                selectedCol = col;
+                            } else {
+                                endTurn();
+                            }
                         }
                     } else {
-                        if (row == selectedRow && col == selectedCol) {
-                            selectedRow = -1;
-                            selectedCol = -1;
+                        if (selectedRow == -1) {
+                            if (isCurrentPlayerPiece(Board.boardState[row][col])) {
+                                selectedRow = row;
+                                selectedCol = col;
+                            }
                         } else {
-                            if (Board.MoveCheckerOnce(selectedRow, selectedCol, row, col)) {
+                            if (row == selectedRow && col == selectedCol) {
                                 selectedRow = -1;
                                 selectedCol = -1;
-
-                                currentPlayer = (currentPlayer == 1) ? 2 : 1;
-                                updateTurnLabel();
                             } else {
-                                if (Board.boardState[row][col] == currentPlayer) {
-                                    selectedRow = row;
-                                    selectedCol = col;
+                                int moveResult = Board.MoveCheckerOnce(selectedRow, selectedCol, row, col);
+                                if (moveResult == 1) {
+                                    endTurn();
+                                } else if (moveResult == 2) {
+                                    if (Board.HasAnyJumps(row, col)) {
+                                        selectedRow = row;
+                                        selectedCol = col;
+                                        isJumpingSequence = true;
+                                    } else {
+                                        endTurn();
+                                    }
                                 } else {
-                                    selectedRow = -1;
-                                    selectedCol = -1;
+                                    if (isCurrentPlayerPiece(Board.boardState[row][col])) {
+                                        selectedRow = row;
+                                        selectedCol = col;
+                                    } else {
+                                        selectedRow = -1;
+                                        selectedCol = -1;
+                                    }
                                 }
                             }
                         }
@@ -159,17 +218,24 @@ public class CheckersGUI extends JFrame {
                 int hX = (int) Math.round(tileCenterX - (highlightWidth / 2.0));
                 int hY = (int) Math.round(tileCenterY - (highlightHeight / 2.0));
 
-                g2d.setColor(new Color(0, 255, 0, 80));
+                if (isJumpingSequence) {
+                    g2d.setColor(new Color(255, 0, 0, 80));
+                } else {
+                    g2d.setColor(new Color(0, 255, 0, 80));
+                }
                 g2d.fillOval(hX, hY, (int) Math.round(highlightWidth), (int) Math.round(highlightHeight));
 
-                g2d.setColor(new Color(186, 186, 186, 180));
+                g2d.setColor(new Color(174, 174, 174, 180));
                 double moveHighlightRatio = 0.2;
                 double moveHighlightWidth = tileWidth * moveHighlightRatio;
                 double moveHighlightHeight = tileHeight * moveHighlightRatio;
 
                 for (int r = 0; r < NUM_OF_TILES; r++) {
                     for (int c = 0; c < NUM_OF_TILES; c++) {
-                        if (Board.CanCheckerMoveOnce(selectedRow, selectedCol, r, c) > 0) {
+                        int moveType = Board.CanCheckerMoveOnce(selectedRow, selectedCol, r, c);
+                        if (moveType > 0) {
+                            if (isJumpingSequence && moveType != 2) continue;
+
                             double targetCenterX = (c * tileWidth) + (tileWidth / 2.0);
                             double targetCenterY = (r * tileHeight) + (tileHeight / 2.0);
 
@@ -192,11 +258,17 @@ public class CheckersGUI extends JFrame {
 
                         int x = (int) Math.round(tileCenterX - (pieceWidth / 2.0));
                         int y = (int) Math.round(tileCenterY - (pieceHeight / 2.0));
+                        int w = (int) Math.round(pieceWidth);
+                        int h = (int) Math.round(pieceHeight);
 
                         if (pieceType == 1 && whitePieceImage != null) {
-                            g2d.drawImage(whitePieceImage, x, y, (int) Math.round(pieceWidth), (int) Math.round(pieceHeight), this);
+                            g2d.drawImage(whitePieceImage, x, y, w, h, this);
                         } else if (pieceType == 2 && blackPieceImage != null) {
-                            g2d.drawImage(blackPieceImage, x, y, (int) Math.round(pieceWidth), (int) Math.round(pieceHeight), this);
+                            g2d.drawImage(blackPieceImage, x, y, w, h, this);
+                        } else if (pieceType == 3 && whiteQueenImage != null) {
+                            g2d.drawImage(whiteQueenImage, x, y, w, h, this);
+                        } else if (pieceType == 4 && blackQueenImage != null) {
+                            g2d.drawImage(blackQueenImage, x, y, w, h, this);
                         }
                     }
                 }
