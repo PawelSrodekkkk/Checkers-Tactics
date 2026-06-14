@@ -1,6 +1,7 @@
 package Checkers_Tactics.gui;
 
 import Checkers_Tactics.Environment.Board;
+import Checkers_Tactics.network.Move;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -23,6 +24,7 @@ public class BoardPanel extends JPanel {
     private int selectedRow = -1;
     private int selectedCol = -1;
     private boolean isJumpingSequence = false;
+    private Move pendingMove;
 
     private final CheckersGUI parentGUI;
 
@@ -43,8 +45,11 @@ public class BoardPanel extends JPanel {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
+                if (!parentGUI.canLocalPlayerInteract()) return;
+
                 int tileWidth = getWidth() / NUM_OF_TILES;
                 int tileHeight = getHeight() / NUM_OF_TILES;
+                if (tileWidth == 0 || tileHeight == 0) return;
 
                 int col = e.getX() / tileWidth;
                 int row = e.getY() / tileHeight;
@@ -52,14 +57,17 @@ public class BoardPanel extends JPanel {
                 if (col < 0 || col > NUM_OF_TILES - 1 || row < 0 || row > NUM_OF_TILES - 1) return;
 
                 if (isJumpingSequence) {
-                    int moveResult = Board.MoveCheckerOnce(selectedRow, selectedCol, row, col);
+                    Move move = new Move(selectedRow, selectedCol, row, col);
+                    if (Board.CanCheckerMoveOnce(selectedRow, selectedCol, row, col) != 2) {
+                        repaint();
+                        return;
+                    }
+                    int moveResult = parentGUI.attemptLocalMove(move);
+                    if (moveResult == CheckersGUI.MOVE_PENDING) {
+                        pendingMove = move;
+                    }
                     if (moveResult == 2) {
-                        if (Board.HasAnyJumps(row, col)) {
-                            selectedRow = row;
-                            selectedCol = col;
-                        } else {
-                            endTurnLocal();
-                        }
+                        handleSuccessfulMove(move, moveResult);
                     }
                 } else {
                     if (selectedRow == -1) {
@@ -72,17 +80,12 @@ public class BoardPanel extends JPanel {
                             selectedRow = -1;
                             selectedCol = -1;
                         } else {
-                            int moveResult = Board.MoveCheckerOnce(selectedRow, selectedCol, row, col);
-                            if (moveResult == 1) {
-                                endTurnLocal();
-                            } else if (moveResult == 2) {
-                                if (Board.HasAnyJumps(row, col)) {
-                                    selectedRow = row;
-                                    selectedCol = col;
-                                    isJumpingSequence = true;
-                                } else {
-                                    endTurnLocal();
-                                }
+                            Move move = new Move(selectedRow, selectedCol, row, col);
+                            int moveResult = parentGUI.attemptLocalMove(move);
+                            if (moveResult == CheckersGUI.MOVE_PENDING) {
+                                pendingMove = move;
+                            } else if (moveResult > 0) {
+                                handleSuccessfulMove(move, moveResult);
                             } else {
                                 if (isCurrentPlayerPiece(Board.boardState[row][col])) {
                                     selectedRow = row;
@@ -100,13 +103,48 @@ public class BoardPanel extends JPanel {
         });
     }
 
+    private void handleSuccessfulMove(Move move, int moveResult) {
+        if (moveResult == 2 && Board.HasAnyJumps(move.getToRow(), move.getToColumn())) {
+            selectedRow = move.getToRow();
+            selectedCol = move.getToColumn();
+            isJumpingSequence = true;
+        } else {
+            endTurnLocal();
+        }
+    }
+
     private void endTurnLocal() {
         selectedRow = -1;
         selectedCol = -1;
         isJumpingSequence = false;
-        parentGUI.switchPlayer();
+        pendingMove = null;
+        parentGUI.finishLocalTurn();
+    }
 
-        parentGUI.checkWinCondition();
+    public boolean isPendingMove(Move move) {
+        return pendingMove != null && pendingMove.equals(move);
+    }
+
+    public void confirmPendingMove(Move move, int moveResult) {
+        if (!isPendingMove(move)) {
+            return;
+        }
+        pendingMove = null;
+        handleSuccessfulMove(move, moveResult);
+        repaint();
+    }
+
+    public void rejectPendingMove() {
+        pendingMove = null;
+        repaint();
+    }
+
+    public void applyRemoteMove() {
+        selectedRow = -1;
+        selectedCol = -1;
+        isJumpingSequence = false;
+        pendingMove = null;
+        repaint();
     }
 
     private boolean isCurrentPlayerPiece(int pieceType) {
