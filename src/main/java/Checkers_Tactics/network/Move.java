@@ -1,8 +1,11 @@
 package Checkers_Tactics.network;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class Move implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final int fromRow;
     private final int fromColumn;
@@ -30,6 +33,21 @@ public class Move implements Serializable {
 
     public int getToColumn() {
         return toColumn;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof Move move)) return false;
+        return fromRow == move.fromRow
+                && fromColumn == move.fromColumn
+                && toRow == move.toRow
+                && toColumn == move.toColumn;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(fromRow, fromColumn, toRow, toColumn);
     }
 
     @Override
